@@ -1,139 +1,198 @@
 const API_URL = "http://localhost:5000";
+let todosLosRetos = [];
+let retosFiltrados = [];
 
-document.addEventListener("DOMContentLoaded", () => {
-    cargarDificultades();
-    cargarEstados();
-    listarRetos();
-    cargarDificultadesFiltro();
-    // Para filtro de categorías, podrías implementar autocompletado en el futuro
+document.addEventListener("DOMContentLoaded", async () => {
+    await Promise.all([
+        cargarDificultadesFiltro(),
+        cargarCategorias(),
+        cargarRetosIniciales()
+    ]);
 });
 
-// Listar retos (sin filtros)
-async function listarRetos() {
+async function cargarRetosIniciales() {
     try {
-        const res = await fetch(`${API_URL}/retos`);
-        if (!res.ok) throw new Error("Error al obtener retos");
-        const data = await res.json();
-        mostrarRetos(data);
-
-        // Limpiar filtros
-        document.getElementById("filtroCategoria").value = "";
-        document.getElementById("filtroDificultad").value = "";
-
+        const response = await fetch(`${API_URL}/retos`);
+        if (!response.ok) throw new Error("Error al cargar retos");
+        todosLosRetos = await response.json();
+        retosFiltrados = [...todosLosRetos];
+        mostrarRetos();
     } catch (error) {
         mostrarNotificacion(error.message, "error");
-        console.error(error);
+        console.error("Error:", error);
     }
 }
 
-// Mostrar retos en el DOM.
-function mostrarRetos(data) {
+async function cargarCategorias() {
+    try {
+        const response = await fetch(`${API_URL}/categorias`);
+        if (!response.ok) throw new Error("Error al cargar categorías");
+        const categorias = await response.json();
+        
+        const datalist = document.getElementById("categoriasList");
+        datalist.innerHTML = categorias.map(c => 
+            `<option value="${c.nombre}">${c.nombre}</option>`
+        ).join("");
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
+
+async function cargarDificultadesFiltro() {
+    try {
+        const response = await fetch(`${API_URL}/dificultades`);
+        if (!response.ok) throw new Error("Error al cargar dificultades");
+        const dificultades = await response.json();
+        
+        const select = document.getElementById("filtroDificultad");
+        select.innerHTML = '<option value="">Todas las dificultades</option>' + 
+            dificultades.map(d => `<option value="${d.id_dificultad}">${d.nombre}</option>`).join("");
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
+
+function mostrarRetos() {
     const lista = document.getElementById("retosLista");
     lista.innerHTML = "";
 
-    if (data.length === 0) {
+    if (retosFiltrados.length === 0) {
         lista.innerHTML = `<div class="empty-state">
             <i class="fas fa-inbox"></i>
-            <p>No hay retos disponibles. ¡Crea tu primer reto!</p>
+            <p>No hay retos disponibles.</p>
         </div>`;
-        actualizarEstadisticas(0);
+        document.getElementById("totalRetos").textContent = "0";
         return;
     }
 
-    data.forEach(r => {
-        const div = document.createElement("div");
-        div.classList.add("reto");
+    document.getElementById("totalRetos").textContent = retosFiltrados.length;
 
-        // Determinar clase CSS según estado
-        let estadoClass = "";
-        let estadoNombre = r.estado.nombre.toLowerCase();
-
-        if (estadoNombre === "pendiente") estadoClass = "estado-pendiente";
-        if (estadoNombre === "en proceso") estadoClass = "estado-en-proceso";
-        if (estadoNombre === "completado") estadoClass = "estado-completado";
-
-        div.innerHTML = `
-            <strong>${r.titulo}</strong>
-            <p>${r.descripcion}</p>
+    retosFiltrados.forEach(reto => {
+        const estadoNombre = reto.estado.nombre.toLowerCase();
+        const estadoClass = `estado-${estadoNombre.replace(" ", "-")}`;
+        
+        const retoElement = document.createElement("div");
+        retoElement.className = "reto";
+        retoElement.dataset.id = reto.id_reto;
+        retoElement.innerHTML = `
+            <div class="reto-header">
+                <h3>${reto.titulo}</h3>
+            </div>
+            <p>${reto.descripcion}</p>
             <div class="reto-meta">
-                <span><i class="fas fa-tag"></i> ${r.categoria.nombre}</span>
-                <span><i class="fas fa-bolt"></i> ${r.dificultad.nombre}</span>
-                <span class="${estadoClass}"><i class="fas fa-circle"></i> ${r.estado.nombre}</span>
+                <span><i class="fas fa-tag"></i> ${reto.categoria.nombre}</span>
+                <span><i class="fas fa-bolt"></i> ${reto.dificultad.nombre}</span>
+                <span class="${estadoClass}" id="estado-${reto.id_reto}">
+                    <i class="fas fa-circle"></i> ${reto.estado.nombre}
+                </span>
+            </div>
+            <div class="reto-actions">
+                <select class="estado-select" onchange="cambiarEstado(${reto.id_reto}, this.value)">
+                    <option value="1" ${reto.estado.id_estado === 1 ? 'selected' : ''}>Pendiente</option>
+                    <option value="2" ${reto.estado.id_estado === 2 ? 'selected' : ''}>En proceso</option>
+                    <option value="3" ${reto.estado.id_estado === 3 ? 'selected' : ''}>Completado</option>
+                </select>
+                <button class="btn-eliminar" onclick="eliminarReto(${reto.id_reto})">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
             </div>
         `;
-        lista.appendChild(div);
+        lista.appendChild(retoElement);
     });
-
-    actualizarEstadisticas(data.length);
 }
 
-// Actualizar estadísticas
-function actualizarEstadisticas(total) {
-    const statsElement = document.getElementById("stats");
-    if (statsElement) {
-        statsElement.innerHTML = `Mostrando ${total} ${total === 1 ? 'reto' : 'retos'}`;
+async function cambiarEstado(id, idEstado) {
+    try {
+        // Actualización optimista (cambia primero la interfaz)
+        const estadoElement = document.getElementById(`estado-${id}`);
+        if (estadoElement) {
+            const nuevoEstado = idEstado === "1" ? "Pendiente" : 
+                              idEstado === "2" ? "En proceso" : "Completado";
+            estadoElement.className = `estado-${nuevoEstado.toLowerCase().replace(" ", "-")}`;
+            estadoElement.innerHTML = `<i class="fas fa-circle"></i> ${nuevoEstado}`;
+        }
+
+        // Actualización en el servidor
+        const response = await fetch(`${API_URL}/retos/${id}/estado`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id_estado: idEstado })
+        });
+
+        if (!response.ok) throw new Error("Error al cambiar estado");
+
+        // Actualizar datos locales
+        const reto = todosLosRetos.find(r => r.id_reto === id);
+        if (reto) {
+            reto.estado.id_estado = parseInt(idEstado);
+            reto.estado.nombre = idEstado === "1" ? "Pendiente" : 
+                                 idEstado === "2" ? "En proceso" : "Completado";
+        }
+
+    } catch (error) {
+        mostrarNotificacion(error.message, "error");
+        console.error("Error:", error);
+        // Recargar para sincronizar
+        cargarRetosIniciales();
     }
 }
 
-// Filtrar retos por categoría y dificultad
-async function filtrarRetos() {
-    const categoria = document.getElementById("filtroCategoria").value.trim();
+async function eliminarReto(id) {
+    if (!confirm("¿Seguro que quieres eliminar este reto?")) return;
+
+    try {
+        const retoElement = document.querySelector(`.reto[data-id="${id}"]`);
+        if (retoElement) {
+            retoElement.style.opacity = "0.5";
+            retoElement.querySelector(".btn-eliminar").disabled = true;
+        }
+
+        const response = await fetch(`${API_URL}/retos/${id}`, {
+            method: "DELETE"
+        });
+
+        if (!response.ok) throw new Error("Error al eliminar reto");
+
+        // Eliminar localmente
+        todosLosRetos = todosLosRetos.filter(r => r.id_reto !== id);
+        retosFiltrados = retosFiltrados.filter(r => r.id_reto !== id);
+        
+        if (retoElement) {
+            retoElement.remove();
+            document.getElementById("totalRetos").textContent = retosFiltrados.length;
+        }
+
+        mostrarNotificacion("Reto eliminado correctamente", "success");
+
+    } catch (error) {
+        mostrarNotificacion(error.message, "error");
+        console.error("Error:", error);
+    }
+}
+
+function filtrarRetos() {
+    const categoria = document.getElementById("filtroCategoria").value.trim().toLowerCase();
     const dificultad = document.getElementById("filtroDificultad").value;
 
-    try {
-        let url = `${API_URL}/retos?`;
-        if (categoria) {
-            const cats = await (await fetch(`${API_URL}/categorias`)).json();
-            const catObj = cats.find(c => c.nombre.toLowerCase() === categoria.toLowerCase());
-            if (catObj) url += `categoria=${catObj.id_categoria}&`;
-            else {
-                mostrarNotificacion("Categoría no encontrada", "error");
-                return;
-            }
-        }
-        if (dificultad) {
-            url += `dificultad=${dificultad}`;
-        }
+    retosFiltrados = todosLosRetos.filter(reto => {
+        const cumpleCategoria = !categoria || 
+            reto.categoria.nombre.toLowerCase().includes(categoria);
+        const cumpleDificultad = !dificultad || 
+            reto.dificultad.id_dificultad.toString() === dificultad;
+        
+        return cumpleCategoria && cumpleDificultad;
+    });
 
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Error al filtrar retos");
-        const data = await res.json();
-        mostrarRetos(data);
-    } catch (error) {
-        mostrarNotificacion(error.message, "error");
-        console.error(error);
-    }
+    mostrarRetos();
 }
 
-// Cargar dificultades en select
-async function cargarDificultades() {
-    try {
-        const res = await fetch(`${API_URL}/dificultades`);
-        if (!res.ok) throw new Error("Error al cargar dificultades");
-        const data = await res.json();
-        const select = document.getElementById("filtroDificultad");
-
-        data.forEach(d => {
-            select.innerHTML += `<option value="${d.id_dificultad}">${d.nombre}</option>`;
-        });
-    } catch (error) {
-        mostrarNotificacion(error.message, "error");
-        console.error(error);
-    }
+function resetearFiltros() {
+    document.getElementById("filtroCategoria").value = "";
+    document.getElementById("filtroDificultad").value = "";
+    retosFiltrados = [...todosLosRetos];
+    mostrarRetos();
 }
 
-// Cargar estados (aunque no se usan aquí, está para posible futura expansión)
-async function cargarEstados() {
-    try {
-        const res = await fetch(`${API_URL}/estados`);
-        if (!res.ok) throw new Error("Error al cargar estados");
-        // Si quieres, puedes cargar aquí o quitar esta función
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-// Mostrar notificación
 function mostrarNotificacion(mensaje, tipo) {
     const notification = document.createElement("div");
     notification.className = `notification ${tipo}`;
@@ -144,9 +203,11 @@ function mostrarNotificacion(mensaje, tipo) {
 
     document.body.appendChild(notification);
 
-    setTimeout(() => notification.classList.add("show"), 10);
     setTimeout(() => {
-        notification.classList.remove("show");
-        setTimeout(() => document.body.removeChild(notification), 300);
+        notification.classList.add("show");
+    }, 10);
+
+    setTimeout(() => {
+        notification.remove();
     }, 3000);
 }
