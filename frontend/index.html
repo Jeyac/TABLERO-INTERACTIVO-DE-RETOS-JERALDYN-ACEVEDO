@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablero de Retos IA</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1><i class="fas fa-robot"></i> Tablero de retos con IA</h1>
+            <p>Gestiona tus desafíos de inteligencia artificial de manera eficiente</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="form-grid">
+            <!-- Formulario de creación -->
+            <section class="form-section create-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-plus-circle"></i> Crear nuevo reto</h2>
+                </div>
+                <div class="form-group">
+                    <label for="titulo">Título del reto</label>
+                    <input type="text" id="titulo" placeholder="Ej: Aprender Java" />
+                </div>
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <input type="text" id="descripcion" placeholder="Describe brevemente el reto" />
+                </div>
+                <div class="form-group">
+                    <label for="categoriaNombre">Categoría</label>
+                    <input type="text" id="categoriaNombre" placeholder="Ej: Educación" />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dificultadSelect">Dificultad</label>
+                        <select id="dificultadSelect">
+                            <option value="">Seleccionar dificultad</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="estadoSelect">Estado</label>
+                        <select id="estadoSelect">
+                            <option value="">Seleccionar estado</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="crearReto()">
+                    <i class="fas fa-plus"></i> Agregar reto
+                </button>
+            </section>
+
+            <!-- Filtros -->
+            <section class="form-section filter-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-filter"></i> Filtrar retos</h2>
+                </div>
+                <div class="form-group">
+                    <label for="filtroCategoria">Categoría</label>
+                    <input type="text" id="filtroCategoria" placeholder="Filtrar por categoría" />
+                </div>
+                <div class="form-group">
+                    <label for="filtroDificultad">Dificultad</label>
+                    <select id="filtroDificultad">
+                        <option value="">Todas las dificultades</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button class="btn-secondary" onclick="filtrarRetos()">
+                        <i class="fas fa-search"></i> Aplicar filtro
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Lista de retos -->
+        <section class="retos-section">
+            <div class="section-header">
+                <h2><i class="fas fa-tasks"></i> Lista de retos</h2>
+                <div class="header-actions">
+                    <button class="btn-tertiary" onclick="listarRetos()">
+                        <i class="fas fa-list"></i> Mostrar todos
+                    </button>
+                </div>
+            </div>
+            <div id="retosLista"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 Tablero de Retos IA | Desarrollado con amor para entusiastas de la IA por Jéraldyn Acevedo</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
