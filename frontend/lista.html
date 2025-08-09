@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Lista de Retos | Tablero IA</title>
+    <title>Lista de Retos IA</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
@@ -11,53 +11,51 @@
     <header>
         <div class="header-content">
             <h1><i class="fas fa-tasks"></i> Lista de retos con IA</h1>
-            <p>Gestiona tus desafíos de inteligencia artificial fácilmente</p>
+            <p>Filtra, modifica y gestiona tus retos</p>
         </div>
     </header>
 
     <main class="container">
-        <div class="form-grid">
-
-            <!-- Filtros -->
-            <section class="form-section filter-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-filter"></i> Filtrar retos</h2>
-                </div>
-                <div class="form-group">
-                    <label for="filtroCategoria">Categoría</label>
-                    <input type="text" id="filtroCategoria" placeholder="Filtrar por categoría" />
-                </div>
-                <div class="form-group">
-                    <label for="filtroDificultad">Dificultad</label>
-                    <select id="filtroDificultad">
-                        <option value="">Todas las dificultades</option>
-                    </select>
-                </div>
-                <div class="button-group">
-                    <button class="btn-secondary" onclick="filtrarRetos()">
-                        <i class="fas fa-search"></i> Aplicar filtro
-                    </button>
-                </div>
-            </section>
-        </div>
+        <!-- Filtros -->
+        <section class="form-section filter-section">
+            <div class="section-header">
+                <h2><i class="fas fa-filter"></i> Filtrar retos</h2>
+            </div>
+            <div class="form-group">
+                <label for="filtroCategoria">Categoría</label>
+                <input type="text" id="filtroCategoria" placeholder="Filtrar por categoría" list="categoriasList" />
+                <datalist id="categoriasList"></datalist>
+            </div>
+            <div class="form-group">
+                <label for="filtroDificultad">Dificultad</label>
+                <select id="filtroDificultad">
+                    <option value="">Todas las dificultades</option>
+                </select>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="filtrarRetos()">
+                    <i class="fas fa-search"></i> Aplicar filtros
+                </button>
+                <button class="btn-tertiary" onclick="resetearFiltros()">
+                    <i class="fas fa-undo"></i> Resetear
+                </button>
+            </div>
+        </section>
 
         <!-- Lista de retos -->
         <section class="retos-section">
             <div class="section-header">
-                <h2><i class="fas fa-list"></i> Lista de retos</h2>
-                <div class="header-actions">
-                    <button class="btn-tertiary" onclick="listarRetos()">
-                        <i class="fas fa-list"></i> Mostrar todos
-                    </button>
+                <h2><i class="fas fa-list"></i> Retos</h2>
+                <div class="contador-retos">
+                    <span id="totalRetos">0</span> retos encontrados
                 </div>
             </div>
             <div id="retosLista"></div>
-            <div id="stats" class="stats"></div>
         </section>
     </main>
 
     <footer>
-        <p>© 2025 Tablero de Retos IA | Desarrollado con amor para entusiastas de la IA por Jéraldyn Acevedo.</p>
+        <p>© 2025 Tablero de Retos IA | Desarrollado con amor para entusiastas de la IA por Jéraldyn Acevedo</p>
     </footer>
 
     <script src="lista.js"></script>
