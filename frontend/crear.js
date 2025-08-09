@@ -17,7 +17,7 @@ async function crearReto() {
     }
 
     try {
-        // Crear categoría si no existe
+        // Crear categoría si no existe.
         let id_categoria;
         const resCat = await fetch(`${API_URL}/categorias`, {
             method: "POST",
