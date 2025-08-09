@@ -26,7 +26,7 @@ async function listarRetos() {
     }
 }
 
-// Mostrar retos en el DOM
+// Mostrar retos en el DOM.
 function mostrarRetos(data) {
     const lista = document.getElementById("retosLista");
     lista.innerHTML = "";
